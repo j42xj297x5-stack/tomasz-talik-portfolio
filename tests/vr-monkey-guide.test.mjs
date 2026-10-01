@@ -9,10 +9,12 @@ import { VR_WORLD_KNOWLEDGE_CATEGORIES, VR_WORLD_KNOWLEDGE_STAGE_STATE } from '.
 import { VR_WORLD_KNOWLEDGE_CONTENT, resolveVrWorldKnowledgeStage } from '../src/xr/knowledge/vrWorldKnowledgeContent.js';
 
 const drawnText = [];
+const drawnTextPositions = [];
 const roundedRectStarts = [];
 const fillStyles = [];
 const strokeStyles = [];
 const textAlignments = [];
+let createdCanvasCount = 0;
 globalThis.Image = class {
   complete = false; naturalWidth = 0;
   set src(value) { this.url = value; }
@@ -20,15 +22,26 @@ globalThis.Image = class {
 globalThis.document = {
   createElement(tag) {
     assert.equal(tag, 'canvas');
+    const canvasIndex = createdCanvasCount++;
     return {
+      _testCanvasIndex: canvasIndex,
       width: 0, height: 0,
       getContext(type) {
         assert.equal(type, '2d');
+        let activeRoundedRect = null;
         return {
-          clearRect() {}, save() {}, restore() {}, beginPath() {}, moveTo(x, y) { roundedRectStarts.push({ x, y }); }, lineTo() {},
-          arcTo() {}, closePath() {}, fill() {}, stroke() {}, fillRect() {}, drawImage() {},
+          clearRect() {}, save() {}, restore() {}, beginPath() { activeRoundedRect = null; },
+          moveTo(x, y) { activeRoundedRect = { canvasIndex, moveX: x, y, arcCount: 0 }; roundedRectStarts.push(activeRoundedRect); }, lineTo() {},
+          arcTo(x, y, _x2, _y2, radius) {
+            if (!activeRoundedRect) return;
+            activeRoundedRect.arcCount += 1;
+            if (activeRoundedRect.arcCount === 1) {
+              activeRoundedRect.x = activeRoundedRect.moveX - radius;
+              activeRoundedRect.width = x - activeRoundedRect.x;
+            } else if (activeRoundedRect.arcCount === 2) activeRoundedRect.height = y - activeRoundedRect.y;
+          }, closePath() {}, fill() {}, stroke() {}, fillRect() {}, drawImage() {},
           measureText(text) { return { width: String(text).length * 24 }; },
-          fillText(text) { drawnText.push(String(text)); },
+          fillText(text, x, y) { drawnText.push(String(text)); drawnTextPositions.push({ canvasIndex, text: String(text), x, y }); },
           set fillStyle(value) { fillStyles.push(value); }, set strokeStyle(value) { strokeStyles.push(value); },
           set lineWidth(value) {}, set globalCompositeOperation(value) {}, set font(value) {},
           set textAlign(value) { textAlignments.push(value); },
@@ -40,6 +53,12 @@ globalThis.document = {
 };
 
 const { createVrMonkeyGuide, VR_MONKEY_GUIDE_SCREEN, unreadPulseAlpha } = await import('../src/xr/guidance/createVrMonkeyGuide.js');
+const latestMessageRect = (canvas) => roundedRectStarts.findLast(({ canvasIndex }) => canvasIndex === canvas._testCanvasIndex);
+function latestMessageTextBlock(canvas, title) {
+  const titleIndex = drawnTextPositions.findLastIndex(({ canvasIndex, text }) =>
+    canvasIndex === canvas._testCanvasIndex && text === title);
+  return { title: drawnTextPositions[titleIndex], firstBodyLine: drawnTextPositions[titleIndex + 1] };
+}
 assert.equal(unreadPulseAlpha(0), 0);
 assert.equal(unreadPulseAlpha(1), 1);
 assert.ok(unreadPulseAlpha(2) < 1e-12);
@@ -66,6 +85,10 @@ VR_WORLD_KNOWLEDGE_CONTENT.forEach((entry) => {
 assert.equal(resolveVrWorldKnowledgeStage('08.2', 'pl').title, 'Dziedzictwo badaczy');
 assert.equal(resolveVrWorldKnowledgeStage('08.2', 'en').title, 'Legacy of the Researchers');
 assert.equal(resolveVrWorldKnowledgeStage('99.9', 'en'), null);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.maxLinesPerPage, 6,
+  'portfolio retains six body lines per technical page');
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.worldKnowledge.maxLinesPerPage, 6,
+  'World Knowledge matches the six-line reader capacity');
 
 function createFixture(locale = 'en', configure = () => {}, worldKnowledgeModel = null) {
   const floorRoot = new THREE.Group();
@@ -283,12 +306,30 @@ assert.deepEqual(guide.getReaderControlRegions().filter(({ id }) => id.startsWit
   'reader controls expose exactly the activated category pages');
 const content = resolveExperienceVrPage(creative1, 'en');
 assert.ok(drawnText.includes(content.title));
+const firstCardRect = { ...latestMessageRect(guide.messagePanel.canvas) };
+const firstCardText = latestMessageTextBlock(guide.messagePanel.canvas, content.title);
+const expectedReaderHeight = Math.min(guide.messagePanel.canvas.height,
+  DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.message.paddingY * 3
+  + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.titleFontSize * 1.15
+  + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.lineHeight
+    * DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.maxLinesPerPage);
+assert.deepEqual({ x: firstCardRect.x, y: firstCardRect.y, width: firstCardRect.width, height: firstCardRect.height },
+  { x: (guide.messagePanel.canvas.width - 1150) / 2, y: guide.messagePanel.canvas.height - expectedReaderHeight,
+    width: 1150, height: expectedReaderHeight }, 'HISTORY reader uses the fixed six-line bounding rectangle');
 const cardPageCount = guide.getCardPageCount();
 assert.ok(cardPageCount > 1, 'long content is split instead of shrinking or truncating');
 assert.ok(guide.getReaderControlRegions().some(({ id }) => id === 'card-page-next'));
 for (let index = 1; index < cardPageCount; index += 1) {
   guide.hits.set(record, { kind: 'reader-controls', region: { id: 'card-page-next' } }); guide.press(record);
 }
+const lastCardRect = latestMessageRect(guide.messagePanel.canvas);
+const lastCardText = latestMessageTextBlock(guide.messagePanel.canvas, content.title);
+assert.deepEqual({ x: lastCardRect.x, y: lastCardRect.y, width: lastCardRect.width, height: lastCardRect.height },
+  { x: firstCardRect.x, y: firstCardRect.y, width: firstCardRect.width, height: firstCardRect.height },
+  'short and long HISTORY technical pages keep identical reader geometry');
+assert.equal(lastCardText.title.y, firstCardText.title.y, 'HISTORY title Y is stable across technical pages');
+assert.equal(lastCardText.firstBodyLine.y, firstCardText.firstBodyLine.y,
+  'HISTORY first body-line Y is stable across technical pages');
 assert.equal(guide.getCardPage(), cardPageCount - 1);
 assert.ok(content.body.split(/\s+/).every((word) => drawnText.join(' ').includes(word)), 'all paginated body words are rendered');
 
@@ -404,6 +445,17 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
     'category selection keeps the flat World Knowledge grid state');
   assert.equal(knowledgeFixture.guide.messagePanel.group.visible, true, 'selection presents World Knowledge in messagePanel');
   assert.equal(knowledgeFixture.guide.readerControlsPanel.group.visible, true, 'selection reveals the separate reader controls');
+  const knowledgeRect = latestMessageRect(knowledgeFixture.guide.messagePanel.canvas);
+  const knowledgeHeadingText = drawnTextPositions.findLast(({ canvasIndex, text }) =>
+    canvasIndex === knowledgeFixture.guide.messagePanel.canvas._testCanvasIndex
+      && text.includes('FIVE TRANSFORMATIONS')).text;
+  const knowledgeText = latestMessageTextBlock(knowledgeFixture.guide.messagePanel.canvas, knowledgeHeadingText);
+  assert.deepEqual({ x: knowledgeRect.x, y: knowledgeRect.y, width: knowledgeRect.width, height: knowledgeRect.height },
+    { x: firstCardRect.x, y: firstCardRect.y, width: firstCardRect.width, height: firstCardRect.height },
+    'WORLD_KNOWLEDGE uses the same fixed reader rectangle as HISTORY');
+  assert.equal(knowledgeText.title.y, firstCardText.title.y, 'reader title Y is shared across both information browsers');
+  assert.equal(knowledgeText.firstBodyLine.y, firstCardText.firstBodyLine.y,
+    'reader first body-line Y is shared across both information browsers');
   assert.ok(knowledgeFixture.guide.getWorldKnowledgeTextPageCount() > 1, 'long World Knowledge copy paginates');
   assert.equal(knowledgeFixture.guide.getInteractiveRegions().filter(({ id }) => id.startsWith('world-category:')).length, 1,
     'the same category grid remains interactive after category selection');
@@ -456,7 +508,7 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
 {
   const states = new Map(VR_WORLD_KNOWLEDGE_CATEGORIES.flatMap((category) =>
     category.stageIds.map((id) => [id, VR_WORLD_KNOWLEDGE_STAGE_STATE.LOCKED])));
-  states.set('11.1', VR_WORLD_KNOWLEDGE_STAGE_STATE.AVAILABLE);
+  states.set('11.1', VR_WORLD_KNOWLEDGE_STAGE_STATE.READ);
   states.set('11.2', VR_WORLD_KNOWLEDGE_STAGE_STATE.AVAILABLE);
   const marked = [];
   const model = {
@@ -469,13 +521,13 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
     markStageRead(id) { marked.push(id); states.set(id, VR_WORLD_KNOWLEDGE_STAGE_STATE.READ); return true; },
     subscribe() { return () => {}; }
   };
-  const single = createFixture('en', (settings) => { settings.worldKnowledge.maxLinesPerPage = 20; }, model);
+  const single = createFixture('en', () => {}, model);
   single.guide.open();
   single.guide.hits.set(single.record, { kind: 'panel', region: { id: 'world-knowledge' } }); single.guide.press(single.record);
   single.guide.hits.set(single.record, { kind: 'panel', region: { id: 'world-category:platform.sectors' } });
   single.guide.press(single.record);
   assert.equal(single.guide.getWorldKnowledgeTextPageCount(), 1, 'short stage resolves to one technical page');
-  assert.deepEqual(marked, ['11.1'], 'deliberately opening a single-page stage marks only that stage READ');
+  assert.deepEqual(marked, ['11.2'], 'deliberately opening a newly single-page stage marks only that stage READ');
   assert.equal(single.guide.getReaderControlRegions().some(({ id }) => id.startsWith('world-knowledge-page-')), false,
     'one-page stages omit the complete pagination group');
   single.guide.close();

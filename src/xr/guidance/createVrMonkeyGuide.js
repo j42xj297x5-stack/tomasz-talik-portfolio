@@ -271,35 +271,18 @@ export function createVrMonkeyGuide({
     if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE && selectedWorldKnowledgeStageId) {
       const presentation = worldKnowledgePresentation();
       if (!presentation) { texture.needsUpdate = true; return; }
-      drawTitledMessage(context, canvas, presentation.heading, presentation.pages[presentation.page]);
+      drawFixedReaderMessage(context, canvas, presentation.heading, presentation.pages[presentation.page]);
       texture.needsUpdate = true;
       return;
     }
     const selectedPage = pagesById.get(selectedPageId);
     if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY && selectedPage) {
       const resolved = resolveExperienceVrPage(selectedPage, locale);
-      context.font = `${settings.message.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
-      const titleWidth = context.measureText(resolved.title).width;
       context.font = `${settings.card.bodyFontSize}px sans-serif`;
       const pages = paginateText(context, resolved.body, settings.message.maxBubbleWidthPx - settings.message.paddingX * 2,
         settings.card.maxLinesPerPage);
       cardPage = Math.min(cardPage, pages.length - 1);
-      const lines = pages[cardPage];
-      const bodyWidth = Math.max(...lines.map((line) => context.measureText(line).width), 0);
-      const titleLineHeight = settings.card.titleFontSize * 1.15;
-      const titleGap = settings.message.paddingY;
-      const boxWidth = Math.min(settings.message.maxBubbleWidthPx,
-        Math.max(titleWidth, bodyWidth) + settings.message.paddingX * 2);
-      const boxHeight = Math.min(canvas.height, settings.message.paddingY * 2 + titleLineHeight + titleGap
-        + lines.length * settings.card.lineHeight);
-      const x = (canvas.width - boxWidth) / 2; const y = canvas.height - boxHeight;
-      drawBubble(context, x, y, boxWidth, boxHeight);
-      context.fillStyle = settings.colors.text; context.textAlign = 'center'; context.textBaseline = 'middle';
-      context.font = `${settings.message.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
-      context.fillText(resolved.title, canvas.width / 2, y + settings.message.paddingY + titleLineHeight / 2);
-      context.font = `${settings.card.bodyFontSize}px sans-serif`;
-      lines.forEach((line, index) => context.fillText(line, canvas.width / 2,
-        y + settings.message.paddingY + titleLineHeight + titleGap + settings.card.lineHeight * (index + 0.5)));
+      drawFixedReaderMessage(context, canvas, resolved.title, pages[cardPage]);
       texture.needsUpdate = true;
       return;
     }
@@ -321,17 +304,14 @@ export function createVrMonkeyGuide({
     texture.needsUpdate = true;
   }
 
-  function drawTitledMessage(context, canvas, title, lines) {
-    context.font = `${settings.message.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
-    const titleWidth = context.measureText(title).width;
-    context.font = `${settings.card.bodyFontSize}px sans-serif`;
-    const bodyWidth = Math.max(...lines.map((line) => context.measureText(line).width), 0);
+  function drawFixedReaderMessage(context, canvas, title, lines) {
     const titleLineHeight = settings.card.titleFontSize * 1.15;
     const titleGap = settings.message.paddingY;
-    const boxWidth = Math.min(settings.message.maxBubbleWidthPx,
-      Math.max(titleWidth, bodyWidth) + settings.message.paddingX * 2);
+    const bodyLineCapacity = Math.max(settings.card.maxLinesPerPage,
+      settings.worldKnowledge?.maxLinesPerPage ?? settings.card.maxLinesPerPage);
+    const boxWidth = Math.min(canvas.width, settings.message.maxBubbleWidthPx);
     const boxHeight = Math.min(canvas.height, settings.message.paddingY * 2 + titleLineHeight + titleGap
-      + lines.length * settings.card.lineHeight);
+      + bodyLineCapacity * settings.card.lineHeight);
     const x = (canvas.width - boxWidth) / 2; const y = canvas.height - boxHeight;
     drawBubble(context, x, y, boxWidth, boxHeight);
     context.fillStyle = settings.colors.text; context.textAlign = 'center'; context.textBaseline = 'middle';
@@ -688,7 +668,7 @@ export function createVrMonkeyGuide({
     messagePanel.context.font = `${settings.card.bodyFontSize}px sans-serif`;
     const pages = paginateText(messagePanel.context, stage.body,
       settings.message.maxBubbleWidthPx - settings.message.paddingX * 2,
-      settings.worldKnowledge?.maxLinesPerPage ?? 4);
+      settings.worldKnowledge?.maxLinesPerPage ?? settings.card.maxLinesPerPage);
     const page = Math.max(0, Math.min(worldKnowledgeTextPage, pages.length - 1));
     return { heading: `${entry.title.toUpperCase()} — ${stage.title.toUpperCase()}`,
       pages, page, stage };
