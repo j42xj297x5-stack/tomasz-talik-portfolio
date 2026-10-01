@@ -1,14 +1,16 @@
 # WIEDZA O ŚWIECIE / KNOWLEDGE OF THE WORLD
 
-Status: MASTER CONTENT SOURCE
+Status: CURRENT / CANONICAL MASTER CONTENT SOURCE / RUNTIME INTEGRATION PENDING
 
-Dokument zawiera pełną warstwę znaczeniową wiedzy o świecie Orange Monkey VR.
+This document owns the semantic and bilingual source content for Orange Monkey VR world knowledge. The bilingual PL/EN body is intentional product content and remains bilingual even though repository documentation prose is normally English. Its subordinate [`EXPERIENCE_VR_WORLD_KNOWLEDGE_PROGRESSION.md`](EXPERIENCE_VR_WORLD_KNOWLEDGE_PROGRESSION.md) owns the binding future discovery-stage, lifecycle and inheritance contract without changing this master content.
 
-Nie jest bezpośrednim katalogiem tekstów runtime.
+Knowledge fragments are intended to support future progressive discovery through Monkey and abbreviated inheritance into Player Y knowledge.
 
-Każdy temat został podzielony na małe fragmenty wiedzy. Fragment może zostać udostępniony przez progresję, odczytany u Małpy, a następnie odziedziczony przez podręczną WIEDZĘ gracza w skróconej formie.
+Exact runtime availability, `READ` state, inheritance rules and progression bindings are defined only by the subordinate progression contract where resolved. This master source does not define runtime unlock conditions, Scenario transitions, persistence, Monkey menu UI, Player Y projection implementation or concrete presentation assets.
 
-Identyfikatory fragmentów pozostają niezależne od języka.
+Existing runtime communication and copy authorities remain authoritative for delivery, lifecycle behavior and implemented copy until a dedicated implementation/synchronization task explicitly maps this content into runtime. Existing Proto-Astro technical models remain authoritative for actual Proto-Astro identity and gameplay-domain behavior.
+
+Fragment IDs remain language-independent.
 
 ---
 
