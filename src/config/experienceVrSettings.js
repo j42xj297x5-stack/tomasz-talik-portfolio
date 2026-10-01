@@ -193,6 +193,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     },
     message: {
       position: { x: 0, y: 0, z: 0 }, width: 1.9, height: 0.80, gapFromAttention: 0.03,
+      packageVerticalOffset: -0.20,
       canvasWidth: 1431, canvasHeight: 600, paddingX: 44, paddingY: 31, maxBubbleWidthPx: 1301, cornerRadius: 64,
       fontSize: 64, fontWeight: 600, lineHeight: 78, maxLines: 4
     },
@@ -208,7 +209,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       historyItemPadding: 9, historyGlyphStarGap: 8, historyColumnGap: 112, historyRowGap: 12,
       historyNavigationHeight: 100, historyNavigationGap: 12,
       navigationWidth: 150,
-      categoryFrameWidthScale: 0.85, categoryIconVerticalOffsetFraction: 0.05
+      categoryFrameWidthScale: 0.85, worldKnowledgeCategoryFrameWidthScale: 0.68,
+      worldKnowledgeCategoryVerticalTrimFraction: 0.03, categoryIconVerticalOffsetFraction: 0.05
     },
     card: {
       eyebrowFontSize: 38, eyebrowLineHeight: 44, headingLevelGap: 4, headingBodyGap: 24,

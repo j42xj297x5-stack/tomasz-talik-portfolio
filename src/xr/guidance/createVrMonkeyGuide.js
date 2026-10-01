@@ -158,7 +158,8 @@ export function createVrMonkeyGuide({
   messagePanel.group.position.set(
     0,
     attentionTop + settings.message.gapFromAttention + settings.readerControls.height
-      + settings.readerControls.gapFromMessage + settings.message.height / 2,
+      + settings.readerControls.gapFromMessage + settings.message.height / 2
+      + settings.message.packageVerticalOffset,
     settings.attention.position.z
   );
   messagePanel.group.visible = false;
@@ -410,11 +411,13 @@ export function createVrMonkeyGuide({
     context.fill(); context.stroke();
     return hovered ? settings.colors.dialogueButtonHoverText : settings.colors.dialogueButtonText;
   }
-  function drawCategoryVisualFrame(context, region, { selected, hovered, verticalInset = 0 }) {
-    const frameWidth = region.width * settings.dialogue.categoryFrameWidthScale;
+  function drawCategoryVisualFrame(context, region,
+    { selected, hovered, verticalInset = 0, bottomTrim = 0,
+      widthScale = settings.dialogue.categoryFrameWidthScale }) {
+    const frameWidth = region.width * widthScale;
     const visualFrame = { ...region,
       x: region.x + (region.width - frameWidth) / 2, y: region.y + verticalInset,
-      width: frameWidth, height: region.height - verticalInset * 2 };
+      width: frameWidth, height: region.height - verticalInset * 2 - bottomTrim };
     const contentColor = drawInteractiveRegion(context, visualFrame, hovered || selected);
     if (selected) {
       context.strokeStyle = settings.colors.accent; context.lineWidth = 6;
@@ -567,19 +570,21 @@ export function createVrMonkeyGuide({
     const navTop = canvas.height - padding - navHeight; const cellWidth = (canvas.width - padding * 2) / columns;
     const gridBottom = navTop - settings.dialogue.gap;
     const cellHeight = (gridBottom - padding) / 3; const iconSize = Math.min(cellWidth * 0.58, cellHeight * 0.68);
+    const verticalTrim = cellHeight * settings.dialogue.worldKnowledgeCategoryVerticalTrimFraction;
     entries.forEach((entry, index) => {
       const column = index % columns; const row = Math.floor(index / columns);
       const region = addRegion({ id: `world-category:${entry.categoryId}`, x: padding + column * cellWidth,
         y: padding + row * cellHeight, width: cellWidth, height: cellHeight });
       const selected = entry.categoryId === selectedWorldKnowledgeCategoryId;
       const { contentColor } = drawCategoryVisualFrame(context, region,
-        { selected, hovered: hoveredOption === region.id, verticalInset: 4 });
+        { selected, hovered: hoveredOption === region.id, verticalInset: 4, bottomTrim: verticalTrim,
+          widthScale: settings.dialogue.worldKnowledgeCategoryFrameWidthScale });
       context.globalAlpha = entry.unread ? 0.75 + unreadPulseAlpha(elapsed) * 0.25 : 1;
       const iconOffsetY = iconSize * settings.dialogue.categoryIconVerticalOffsetFraction;
       drawKnowledgeIcon(context, entry.icon, region.x + (cellWidth - iconSize) / 2,
         region.y + iconOffsetY, iconSize, contentColor);
       context.globalAlpha = 1; drawWorldKnowledgeStars(context, entry, region.x,
-        region.y + cellHeight - 16, cellWidth, contentColor);
+        region.y + cellHeight - 16 - verticalTrim, cellWidth, contentColor);
     });
     const back = addRegion({ id: 'back-world-menu', x: padding, y: navTop,
       width: navigationWidth(context, '←'), height: navHeight }); drawButton(context, back, '←');

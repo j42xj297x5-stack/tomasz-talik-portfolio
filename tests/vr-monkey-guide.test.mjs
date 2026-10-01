@@ -103,6 +103,8 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.maxLinesPerPage, 6,
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.worldKnowledge.maxLinesPerPage, 7,
   'World Knowledge uses seven body lines per technical page');
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryFrameWidthScale, 0.85);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.worldKnowledgeCategoryFrameWidthScale, 0.68);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.worldKnowledgeCategoryVerticalTrimFraction, 0.03);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryIconVerticalOffsetFraction, 0.05);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.backdropOpacity, 0.30);
 assert.equal(compactWorldKnowledgeForReader('One.\r\n\r\nTwo.\n \t\n\nThree.'), 'One. Two. Three.',
@@ -302,11 +304,13 @@ assert.ok(guide.arcs.every(({ rotation }) => rotation.z === Math.PI), 'attention
 assert.equal(guide.attentionRoot.position.z, -0.05);
 assert.equal(guide.attentionRoot.position.y, 1.5);
 assert.equal(guide.messagePanel.group.position.z, guide.attentionRoot.position.z);
-assert.ok(Math.abs(guide.readerControlsPanel.group.position.y - (1.5 + 0.17 + 0.03 + 0.20 / 2)) < 1e-12,
-  'reader strip preserves the former lower envelope above the attention arcs');
+assert.ok(Math.abs(guide.readerControlsPanel.group.position.y - (1.5 + 0.17 + 0.03 + 0.20 / 2 - 0.20)) < 1e-12,
+  'reader strip follows the explicit 20 cm downward package offset');
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.message.packageVerticalOffset, -0.20,
+  'the complete upper information package has an explicit presentation offset');
 assert.equal(guide.messagePanel.group.position.y,
   guide.readerControlsPanel.group.position.y + 0.20 / 2 + 0.025 + 0.80 / 2,
-  'message panel shifts upward and retains the configured gap above reader controls');
+  'message panel and reader controls retain their configured mutual gap');
 assert.deepEqual(guide.dialoguePanel.group.position.toArray(), [1.20, 0.80, 0.50]);
 assert.ok(Math.abs(guide.dialoguePanel.group.rotation.x - (-7.5 * Math.PI / 180)) < 1e-12);
 assert.ok(fillStyles.includes('#090909'), 'dialogue controls use an almost-black background');
@@ -671,17 +675,24 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
     'category selection keeps the flat World Knowledge grid state');
   const worldRegion = knowledgeFixture.guide.getInteractiveRegions()
     .find(({ id }) => id === 'world-category:world.five_transformations');
+  const worldVerticalTrim = worldRegion.height * 0.03;
   const worldFrame = roundedRectStarts.findLast(({ canvasIndex, y, width }) =>
     canvasIndex === knowledgeFixture.guide.dialoguePanel.canvas._testCanvasIndex && y === worldRegion.y + 4
-      && Math.abs(width - worldRegion.width * 0.85) < 1e-12);
-  assert.ok(worldFrame, 'World Knowledge visual frame is 85% of the unchanged category interaction width');
+      && Math.abs(width - worldRegion.width * 0.68) < 1e-12);
+  assert.ok(worldFrame, 'World Knowledge visual frame is 68% of the unchanged category interaction width');
   assert.ok(Math.abs(worldFrame.x + worldFrame.width / 2 - (worldRegion.x + worldRegion.width / 2)) < 1e-12,
     'World Knowledge visual frame remains horizontally centered in its interaction region');
+  assert.equal(worldFrame.height, worldRegion.height - 8 - worldVerticalTrim,
+    'World Knowledge visual frame trims 3% of cell height from its bottom');
   const worldIconSize = Math.min(worldRegion.width * 0.58, worldRegion.height * 0.68);
   const worldIcon = drawnImagePositions.findLast(({ canvasIndex, width }) =>
     canvasIndex === knowledgeFixture.guide.dialoguePanel.canvas._testCanvasIndex && width === worldIconSize);
   assert.equal(worldIcon.y, worldRegion.y + worldIconSize * 0.05,
     'World Knowledge artwork receives the shared 5% vertical offset');
+  const worldStar = drawnTextPositions.findLast(({ canvasIndex, text }) =>
+    canvasIndex === knowledgeFixture.guide.dialoguePanel.canvas._testCanvasIndex && text === '★');
+  assert.equal(worldStar.y, worldRegion.y + worldRegion.height - 16 - worldVerticalTrim,
+    'World Knowledge compact stars move upward by the same 3% trim');
   assert.equal(knowledgeFixture.guide.messagePanel.group.visible, true, 'selection presents World Knowledge in messagePanel');
   assert.equal(knowledgeFixture.guide.readerControlsPanel.group.visible, true, 'selection reveals the separate reader controls');
   const knowledgeRect = latestMessageRect(knowledgeFixture.guide.messagePanel.canvas);
