@@ -42,6 +42,7 @@ import { createVrRuneStoneInstallationInteraction } from './xr/runes/createVrRun
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
 import { createVrFirstRingFlow } from './xr/progression/createVrFirstRingFlow.js';
 import { createVrProgressionSemanticHandoff } from './xr/progression/createVrProgressionSemanticHandoff.js';
+import { createVrWorldKnowledgeModel } from './xr/knowledge/createVrWorldKnowledgeModel.js';
 import { createVrProgressionShortcut } from './xr/progression/applyVrProgressionShortcut.js';
 import { createVrShellSystem } from './xr/shells/createVrShellSystem.js';
 import { resolveVrSphericalLayerRanges, VR_SPHERICAL_LAYER_IDS } from './xr/world/createVrSphericalLayerActor.js';
@@ -774,6 +775,7 @@ function synchronizeReconstructionDerivedState() {
   earlyExperienceGuidance.synchronizeReconstructedProgression({
     hasActivatedPages: progressionController.getActivatedPageIds().length > 0
   });
+  worldKnowledgeModel.synchronize();
 }
 const firstRingFlow = createVrFirstRingFlow({
   progressFloor,
@@ -1015,6 +1017,17 @@ const unsubscribeSmallGlyphFieldReadiness = astroAttractorProductionController.s
   synchronizeSmallGlyphFieldReadiness
 );
 synchronizeSmallGlyphFieldReadiness();
+const worldKnowledgeModel = createVrWorldKnowledgeModel({
+  progressionController,
+  furnaceProgressionController,
+  protoAstroTuningController,
+  astroAttractorProductionController,
+  asterionProductionController,
+  runeStoneProgressionController,
+  runeBridgeActor,
+  asterionResonatorFieldActor,
+  pages: experienceVrPages
+});
 const currentObjectiveProjection = createVrCurrentObjectiveProjection({
   locale: language,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId(),
@@ -1332,10 +1345,12 @@ const crystalCollection = createVrCrystalCollection({
     progressionSemanticHandoff.onPageCommitted(page, meta);
     scenarioProgressReconciler?.request();
     presentLiveRuneBridgeReadinessTransitions();
+    worldKnowledgeModel.synchronize();
   }
 });
 createVrProgressionShortcut({ search: location.search, pages: experienceVrPages, progressionController,
   progressFloor, syncQaPostP1WorldState })();
+worldKnowledgeModel.synchronize();
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
 const activateButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-activate-model');
 const activateCompanion = crystalReliquary.attachCompanion({ id: 'activate', model: activateButtonModel, settings: settings.reliquary.buttons,
@@ -2300,6 +2315,7 @@ function restoreVrScenarioBaseline() {
   asterionResonatorFieldPresentation.reset();
   asterionResonatorFieldArcPresentation.reset();
   protoAstroTuningController.resetBaseline();
+  worldKnowledgeModel.resetBaseline();
   crystalCollection.reset();
   reliquaryHints.reset();
   activateButton.reset();
@@ -2445,6 +2461,7 @@ window.addEventListener('pagehide', () => {
   asterionResonatorTargetResponsePresentation.dispose();
   asterionResonatorTargetAudioProjection.dispose();
   asterionResonatorTargetAcquisitionActor.dispose();
+  worldKnowledgeModel.dispose();
   asterionResonatorFieldActor.dispose();
   asterionProductionController.dispose();
   astroAttractorProductionController.dispose();
