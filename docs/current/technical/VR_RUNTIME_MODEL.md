@@ -1,6 +1,6 @@
 # Experience VR Runtime Model
 
-Status: canonical description of the implemented runtime, including the CURRENT unified WebXR bootstrap and the authored Scenario route through terminal point `100.10`, synchronized on 2026-09-25. Genuine future gameplay extensions are documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
+Status: canonical description of the implemented runtime, including the CURRENT unified WebXR bootstrap and the authored Scenario route through terminal point `100.10`, synchronized on 2026-10-02. Genuine future gameplay extensions are documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
 ## Scenario composition boundary
 
@@ -242,6 +242,8 @@ The shipped GLBs verify each required name exactly once, finite TRS with nonzero
 
 ## Astro production and Furnace
 
+The Furnace activation owner exposes five process kinds: `SHELL_EXTRACTION`, `SMALL_GLYPH_ESSENCE_EXTRACTION`, `RUNE_TUNING`, `ASTERION_CONSTRUCTION` and `ASTRO_ATTRACTOR_CONSTRUCTION`. Shell and Small Glyph insertion use the same accepted-insertion path for ordinary and Rune-recipe work. Their physical one-shots and all process cues are projected through the Furnace HRTF emitter; exact assets remain centralized in [`VR_AUDIO_MODEL.md`](VR_AUDIO_MODEL.md).
+
 The Furnace is physically revealed at `3.40`: the existing Furnace intro starts an actor-owned, linear 3-second opacity materialization from hidden to each physical material's authored opacity. Reconstruction after that completed beat restores the stable, fully visible Furnace immediately without replaying the transient. At `3.50` Scenario activates the Astro card and the player deliberately chooses `Utwórz astro przyciągacz`; no automatic production occurs. Furnace mode `astro_attractor` is distinct from the existing Asterion mode. `ASTRO_ATTRACTOR_CONSTRUCTION` is distinct from `ASTERION_CONSTRUCTION`, although both use the shared Furnace process driver. The physical output is parented to `VR_FURNACE_PRODUCT_VOLUME` and remains in the chamber until claim.
 
 `createVrAstroAttractorProductionController` owns `READY → BUILDING → AVAILABLE → CLAIMING → EARNED`; `CLAIMING` is transient, not a Scenario point. Production representation is separate from the equipment lifecycle managed by `createVrAttractorTool`; the production clone is not a second gameplay Astro. `3.70` is only `AVAILABLE`. With the chamber open, a legal ordinary ray from either hand may target the output and Grab/squeeze initiates claim; Astro then lands in its canonical right slot. Only completion emits `ASTRO_ATTRACTOR_CLAIMED` and enters `3.80`/`EARNED`. Asterion follows the same either-hand claim input and lands in its canonical left hand; this does not remove handedness from later tool use.
@@ -330,6 +332,8 @@ Physical foundation is `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CA
 Readiness normally reads sector completion through `isBranchComplete` and projects bridges to `HIDDEN` or `DOCKED`. After stable `4.80`, Earth, Fire and Wood are normally ready; Metal and Water are not. The implemented late Scenario opens Water installation through the existing readiness override after Ether capture; detailed Water and Rune mechanics remain with their dedicated owners. The bridge actor owns authored calibration, stable hover/installation anchors, implemented physical extension and transient mechanics/state, not tuning, readiness source or installed truth. `RuneStoneProgressionController` separately owns `tunedRuneFamilies` and `installedRuneFamilies`; installed commit occurs only after completed snap and physical finalization.
 
 ## Current implemented boundary
+
+The late authored runtime does not stop at `5.60`. Its complete spine is `4.80 → 5.10 → 5.15 → 5.20 → 5.30 → 5.40 → 5.50 → 5.60 → 5.70 → 5.80 → 6.10 → 6.20 → 6.30 → 100.10`. Implemented owners cover Water synchronization and the final Water hunt, farewell, world release/whiteout, credits, Orange Monkey VR brand slate and terminal XR exit. Ether `CAPTURED` also owns a persistent Monkey-anchored spatial projection that reconstruction restores without replaying capture; detailed audio mapping belongs to `VR_AUDIO_MODEL.md`.
 
 The implemented authored Scenario continues from `5.10` through `5.15 → 5.20 → 5.30 → 5.40 → 5.50 → 5.60 → 5.70 → 5.80 → 6.10 → 6.20 → 6.30 → 100.10`. `5.60` is the stable five-elemental-Rune/full-Resonator semantic boundary, not the end: the remaining points complete the final portfolio beat and orchestrate farewell, world release, credits, brand slate and exit. Stable reconstruction folds each earlier point's settled consequences, including late portfolio, Rune/Ether and finale owner state, without recreating transient interactions or replaying entry choreography.
 

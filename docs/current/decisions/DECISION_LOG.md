@@ -1,6 +1,17 @@
 # Decision Log
 
-Status: current binding decisions with preserved history. Synchronized on 2026-09-11 through the completed bounded Rings 1–3 sandbox migration, implemented Monkey communication contracts, the implemented `5.60` late Rune/Resonator boundary and binding future Water/finale canon.
+Status: current binding decisions with preserved history. Synchronized on 2026-10-02 through the implemented late Scenario/finale and current audio baseline. Older entries remain evidence of decisions at their date and are superseded only where a later entry says so.
+
+## 2026-10-02 — CURRENT implemented late Scenario, finale and audio baseline (SUPERSEDING)
+
+This entry preserves every older decision as historical evidence while superseding conflicting CURRENT-status claims that stop authored Scenario at `5.10`/`5.60`, mark Water/finale behavior as future, treat `ambient_05` as dormant, or omit current Furnace/Ether audio ownership.
+
+1. The implemented late spine is `4.80 → 5.10 → 5.15 → 5.20 → 5.30 → 5.40 → 5.50 → 5.60 → 5.70 → 5.80 → 6.10 → 6.20 → 6.30 → 100.10`. Water synchronization, final Water Guidance/hunt, farewell, world release/whiteout, credits, brand slate and XR exit are CURRENT.
+2. Water Sync Contact, strong Haiku damping, final-Water acceleration and additional synchronized-field lightning are closed/abandoned ideas, not future requirements.
+3. `ambient_05` is active from Tier 4 completion at `5.10`; its tail is exactly `ambient_loop_01 → ambient_loop_03 → ambient_loop_04 → idle`, and all main programs share the `noise_quiete_loop_01–13` cursor. `ambient_loop_02` has no runtime or physical-asset role.
+4. Furnace audio follows five implemented process kinds. Accepted Shell/Small Glyph insertion and all process cues use the Furnace HRTF projection; exact cue mapping belongs to `VR_AUDIO_MODEL.md`.
+5. Binder arrival/completion, installed natural Rune loops and Ether pull/capture projection are implemented. Ether `CAPTURED` owns one persistent Monkey-anchored `noise_laud_loop_09` emitter, restored silently during reconstruction.
+6. READY remains cache-only for every reachable runtime audio path. Physically present but unowned assets have no inferred gameplay or backlog meaning.
 
 ## 2026-09-11 — CURRENT WATER field hue/luminance presentation (SUPERSEDING)
 
