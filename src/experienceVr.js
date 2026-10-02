@@ -1179,7 +1179,11 @@ let astroFurnaceActivateInteraction = null;
 let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
 const runeOpenInteractionSource = { getState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED' };
-const runeActivateInteractionSource = { getState: () => astroFurnaceActivateInteraction?.getState?.() ?? 'IDLE' };
+const runeActivateInteractionSource = {
+  getState: () => astroFurnaceActivateInteraction?.getState?.() ?? 'IDLE',
+  getProcessKind: () => astroFurnaceActivateInteraction?.getProcessKind?.() ?? null,
+  getExtractionProgress: () => astroFurnaceActivateInteraction?.getExtractionProgress?.() ?? 0
+};
 let runeRecipeSelectionController = null;
 const runeRecipeSelectionSource = {
   getExpectedRecipe: () => runeRecipeSelectionController?.getExpectedRecipe?.() ?? null
