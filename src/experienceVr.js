@@ -519,8 +519,15 @@ monkeyMotionRoot.position.set(settings.spatial.monkeyFinal.x, settings.spatial.m
 monkeyActor.dockCharacterToStone();
 monkeyActor.captureScenarioFinalPlacement();
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
+const largeGlyphItems = [
+  'ai-guide',
+  'ethics-life-protection',
+  'haiku-cosmos',
+  'creative-ai',
+  'spotify-digger'
+].map((glyphId) => resolvedPortfolioNodes.find((item) => item.id === glyphId));
 const largeGlyphActor = createVrLargeGlyphActor({
-  items: resolvedPortfolioNodes,
+  items: largeGlyphItems,
   assetManager,
   initialRadius: settings.largeGlyphs.initialRadius,
   worldY: settings.spatial.worldStableCenterY,
