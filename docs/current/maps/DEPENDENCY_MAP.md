@@ -1,163 +1,67 @@
 # Dependency Map
 
+Status: **CURRENT**, synchronized with implemented runtime on 2026-10-02.
+
 ## Documentation flow
 
-`PROJECT_INDEX → canonical technical model → runtime evidence`. Rune authority is [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md); Resonator/sector authority is [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md), with field truth in [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md).
+`PROJECT_INDEX → canonical model → runtime evidence`. Runtime behavior is authoritative evidence; historical audits and legacy plans do not override CURRENT models.
+
+- Scenario/runtime: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md) and [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md).
+- Experience VR audio: [`VR_AUDIO_MODEL.md`](../technical/VR_AUDIO_MODEL.md).
+- Rune state: [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
+- Resonator and field: [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md) and [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md).
+- Late experience/finale: [`EXPERIENCE_VR_RUNES_RESONATOR_FINALE.md`](../concept/EXPERIENCE_VR_RUNES_RESONATOR_FINALE.md).
 
 ## Experience VR composition and authored boundary
 
 ```text
 SPINE → SCENARIO → DIRECTOR → RuntimeExperience → actors / domain owners
 
-4.80 → 5.10 → 5.20 → 5.30 → 5.40 → 5.50 → 5.60 → 100.10
+4.80 → 5.10 → 5.15 → 5.20 → 5.30 → 5.40 → 5.50
+→ 5.60 → 5.70 → 5.80 → 6.10 → 6.20 → 6.30 → 100.10
 ```
 
-`5.60 — Five elemental Runes installed / full Resonator unlocked` is the stable implemented late-game boundary. `P6 → 5.10` remains a debug/QA alias only.
+`5.60` is the full-Resonator teaching boundary, not the end of authored Scenario. `5.70` owns the final Water hunt, `5.80` the farewell, `6.10` world release, `6.20` credits, `6.30` the brand slate, and `100.10` terminal XR exit. Scenario owns ordering and semantics; domain owners retain physical and committed truth.
 
-The completed Rings 1–3 live reconciliation branch is:
+The bounded Rings 1–3 reconciler remains a forward-only observer of domain truth through stable `5.10`. It neither owns nor limits the implemented later Scenario tail.
+
+## Furnace and audio dependency flow
 
 ```text
-domain owners
-  ↓ authoritative snapshots / semantic callbacks
-ScenarioProgressReconciler
-  ↓ bounded catchUpToPoint
-RuntimeExperience
-  ↓
-existing Director / authored destination effects
+accepted insertion / process kind / settled Rune or Ether truth
+→ bounded audio projection
+→ VrAudioBridge
+→ prepared decoded cache
+→ shared bus or HRTF emitter
 ```
 
-These arrows coordinate observation and forward Scenario movement; they do **not** transfer domain ownership into Scenario. Normal semantic events retain first opportunity to advance Scenario, while reconciliation handles domain-ahead or missed-event truth.
+The Furnace owns five kinds: `SHELL_EXTRACTION`, `SMALL_GLYPH_ESSENCE_EXTRACTION`, `RUNE_TUNING`, `ASTERION_CONSTRUCTION` and `ASTRO_ATTRACTOR_CONSTRUCTION`. Its insertions and processes use the Furnace spatial emitter. Scenario selects main ambient programs, including active `ambient_05` at Tier 4 completion; the audio model owns exact cue and tail mappings. READY remains downstream of complete reachable-audio preparation, so runtime playback is cache-only.
 
-Scenario owns dramaturgy, required beats, Guidance/hints, revealed knowledge, crystal progression and semantic capabilities. It observes domain truth; it does not gate already-legal Rune tuning/pull/installation, powered-sector acquisition/control, or Resonator response through `currentPoint` or capability checks.
-
-
-## Experience VR launch and diagnostic sidecars
+## Rune, Ether, Resonator and finale flow
 
 ```text
-Quest Browser OR Chromium + Virtual Desktop / VDXR
-→ normal Experience VR entry → request immersive session
-→ late WebGL2 / renderer bootstrap → committed Experience VR runtime
-
-?debug → pre-runtime diagnostic gate → recording ON → selected scopes
-→ scope sidecar → dev diagnostic transport → Vite recorder → .debug/*.jsonl
+fourth natural Rune + Tier 4
+→ final-Water two-ring rejection
+→ Ether intervention / tuning / transport
+→ Ether CAPTURED at Monkey
+→ Water readiness and ordinary installation
+→ five natural Runes / full Resonator teaching
+→ balanced 222 / M22 / W22 lock
+→ final Water acquisition and Tier 5
+→ farewell → world release → credits → brand → END_XR_SESSION
 ```
 
-The first line names external validated execution environments, not an application dependency on Virtual Desktop. Diagnostics are read-only/fail-soft evidence and do not feed back into Scenario, Director, gameplay or runtime truth. Recording defaults OFF; only explicitly selected scopes are composed.
+Ether never enters a natural slot. Capture persists Water readiness and projects one Monkey-anchored `noise_laud_loop_09` emitter; reconstruction restores the emitter silently. Water control, `waterSyncLock`, the final cap policy and the complete finale are implemented, not future dependencies. There is no Water Sync Contact, strong Haiku damping, final-Water acceleration or additional lightning work.
 
-## Astrolabium family interpretation
+## Ownership invariants
 
-```text
-Furnace processed natural Shell truth
-→ AstrolabiumTuningActor
-→ matching natural SMALL_GLYPHS eligibility
-
-Proto-Astro extracted natural Small Glyph essence truth
-→ AstrolabiumTuningActor
-→ matching ordinary LARGE_GLYPHS family knowledge
-
-Rune tuning truth
-→ AstrolabiumTuningActor
-→ matching natural RUNESTONES eligibility
-
-Furnace Asterion Sphere progression complete
-→ AstrolabiumTuningActor
-→ special V / VI SMALL_GLYPHS eligibility
-```
-
-`createVrAstrolabiumTuningActor` is an **IMPLEMENTED**, derived/read-only interpreter and owns no duplicate persistence. `VI` eligibility works live and after hydration from `getAsterionSphereProgress().complete`; it creates no Scenario event or boolean. Immediate availability of all four bands after physical Astrolabium `EARNED` is **CURRENT / IMPLEMENTED**; family targetability remains independently derived.
-
-Special identities remain separate: five processed natural Shells expose `VO`; completed six-Shell Sphere progression exposes `VI`; later `CAN_TUNE_ETHER_RUNE` permits `VI + VO → VU`; later `REVEAL_ETHER_RUNE` materializes `stone_06 / VU`. `V` never enters natural family collections.
-
-Ordinary Large Glyph pull requires learned family knowledge. Late `SPHERE_FAR` reacquisition additionally requires transient Resonator `PULL_READY`; the early/late policy is implemented.
-
-## Contextual Rune Guidance
-
-```text
-first Rune installation fact
-+ current Asterion ownership at playback start
-→ Rune/Resonator Guidance copy branch
-```
-
-Guidance observes both facts and freezes the selected blocks for that playback; it owns neither Rune installation nor Asterion truth.
-
-## Rune tuning, transport, installation and reconstruction
-
-```text
-selected recipe + exact Small Glyph + exact Shell
-→ frozen pre-flight
-→ consume exact frozen ingredients
-→ commit tuning truth
-→ clear transaction and selected recipe
-→ natural RUNESTONES eligibility
-→ scan / lock / pull / CARRIED_ORBIT
-→ legal platform handoff
-→ installation lifecycle
-→ RuneStoneActor INSTALLED
-→ RuneBridgeActor BOUND (settled installed state)
-→ installedRuneFamilies
-```
-
-Tuning, targetability and installation readiness are independent. Normal natural readiness reads sector completeness only. Natural Rune state contains exactly `K/T/S/L/R`; `V` remains special. Reconstruction restores settled installed Rune/`BOUND` bridge state without replaying transport, arrival or installation.
-
-## Powered sectors and Metal ownership
-
-```text
-installed natural Rune
-→ corresponding sector POWERED
-→ acquisition beam legal
-→ lockable / controllable
-
-installed Metal Rune + M00
-→ powered = true; active = false; no Metal extension
-
-installed Metal Rune + any Metal DOF > 0
-→ active = true
-→ LATERAL/FORWARD Metal field extension
-```
-
-`CAN_USE_ADVANCED_RESONATOR` is implemented semantic Scenario truth at `5.60`; it does not own Metal beam availability, lock, dual-DOF control, sector motion, descriptor state, field extension, containment, morph, or rounding.
-
-Metal `M(angle, tilt)` uses independent transient levels `0/1/2/3` at detents `0°/13°/23°/36°`, dominant-axis gesture arbitration, and composed physical motion. Canonical `angle → LATERAL` and `tilt → FORWARD` map those levels monotonically to `0 / 20% / 50% / 75%` expansion. Angle scales the existing LEFT/RIGHT half-extents independently; tilt interpolates the FIRE band toward the global `10–130 m` boundaries. `M22` is the harmonic center and contributes `50%` expansion while retaining maximum Metal rounding. Physical control and rounding are implemented; percentage expansion is **TARGET / NOT YET RUNTIME-SYNCHRONIZED**. Exact signs/gesture axes, dominance and rounding values remain **TUNING / HARDWARE QA**.
-
-## Single Resonator field truth
-
-```text
-installed Rune truth + committed sector levels
-→ FieldDescriptor
-→ resolveAsterionResonatorFieldShape()
-├→ Field Presentation
-└→ containsPointInAsterionResonatorField()
-    → Target Acquisition
-    → stages / decay / sign memory / PULL_READY
-```
-
-Metal changes the same resolved nominal shape used for gameplay containment; no parallel visual/gameplay Metal fields exist. Fillet, bow, skin, skeleton and morph are presentation-only and cannot enlarge containment.
-
-## Implemented late Rune path
-
-```text
-FOURTH_RUNE_INSTALLED
-→ mandatory Monkey Ether intervention
-→ CAN_TUNE_ETHER_RUNE
-→ ETHER_RUNE_TUNED
-→ physical VU reveal
-→ SPECIAL scan / lock / pull / CARRIED_ORBIT
-→ ETHER_MONKEY_CAPTURED
-→ waterInstallationReadinessOverride
-→ Water Binder reveal/readiness
-→ ordinary Water natural installation
-→ FIVE_ELEMENTAL_RUNES_INSTALLED
-→ full Resonator Monkey acknowledgement
-→ CAN_USE_ADVANCED_RESONATOR
-→ stable 5.60
-```
-
-The Ether actor never enters a natural installation slot. Monkey capture persists only the Water readiness override. Water then uses the standard natural installation path and joins the settled five-family natural arrays.
+- Installed natural Rune truth powers its sector; sector control and Field Actor own physical control/descriptor truth.
+- Field presentation and lightning read the descriptor; they do not confirm gameplay state.
+- Target acquisition owns rings, ceiling cycling and `PULL_READY`; Astrolabium owns the legal pull.
+- Scenario/Guidance/finale actors own authored ordering, hints and terminal presentation.
+- Audio observes semantic/domain truth and never mutates it.
+- Unowned physical audio assets are not dependencies or backlog.
 
 ## Future boundary
 
-Still **FUTURE / NOT IMPLEMENTED**: Water dual-DOF physical control; hue/luminance and W22 presentation; harmonic `222/M22/W22` recognition; Water Sync Lock/Contact; Haiku damping; Water-specific anti-bypass pull; final Water hunt/card; world dissolution and XR finale. Metal implementation does not imply these Water/finale systems exist.
-
-## Validation boundary
-
-Hardware smoke confirms corrected Metal Rune tuning completion, Metal beam/acquisition after installation, and `VI` targetability after Sphere completion. Detailed Metal gesture comfort, local signs/axes, dominance margin, composed motion, expansion distances, rounding readability and general perceptual tuning remain outstanding.
+Only genuinely unimplemented work belongs in the gameplay roadmap. Implemented Water synchronization, final Water Guidance/hunt, farewell, world release, credits, brand slate and XR exit must not be routed as future work.
