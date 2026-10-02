@@ -11,6 +11,10 @@ export function applyDeadzone(value, deadzone) {
   return Math.sign(value) * (Math.abs(value) - deadzone) / (1 - deadzone);
 }
 
+function signedPow(value, exponent) {
+  return Math.sign(value) * Math.abs(value) ** exponent;
+}
+
 export function getHorizontalViewerBasis(xrCamera, forward, right) {
   const viewerCamera = xrCamera.isArrayCamera && xrCamera.cameras.length > 0
     ? xrCamera.cameras[0]
@@ -143,7 +147,7 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
         applyYaw(-Math.sign(left.rawX) * THREE.MathUtils.degToRad(snapAngleDegrees));
         yawInputReady = false;
       } else if (turnMode === 'SMOOTH') {
-        applyYaw(-left.x * settings.turnSpeed * delta);
+        applyYaw(-signedPow(left.x, settings.turnResponseExponent) * settings.turnSpeed * delta);
       }
     }
 
