@@ -46,7 +46,7 @@ export function createVrPlayerGuideProjection({ locale, getCurrentObjective, isF
     const content = resolveVrPlayerGuideContent(locale);
     const secondaryTasks = [];
     const secondaryIds = [];
-    if (isAstrolabiumOwned() && !isAsterionOwned()) {
+    if (isAstrolabiumOwned() && !isAsterionOwned() && current?.id !== 'asterion-sphere') {
       secondaryTasks.push(content.asterionBuildTask);
       secondaryIds.push('asterion-build');
     }
@@ -54,9 +54,10 @@ export function createVrPlayerGuideProjection({ locale, getCurrentObjective, isF
     if (finalWaterGuidanceLevel === 'BALANCE') { secondaryTasks.push(content.finalWaterBalanceTask); secondaryIds.push('final-water-balance'); }
     if (finalWaterGuidanceLevel === 'SOLUTION') { secondaryTasks.push(content.finalWaterSolutionTask); secondaryIds.push('final-water-solution'); }
     if (!secondaryTasks.length) return current;
-    const bodies = [...(current ? [current.body] : []), ...secondaryTasks];
+    const blocks = [...(current?.blocks ?? []), ...secondaryTasks];
     return Object.freeze({ id: `${current?.id ?? 'current-task'}+${secondaryIds.join('+')}`,
-      body: bodies.join('\n\n') });
+      title: current?.title ?? content.items.find(({ id }) => id === 'current-task').label,
+      blocks: Object.freeze(blocks) });
   };
 
   function getTools() {
