@@ -3,7 +3,7 @@
 **Status:** CURRENT / canonical communication reference synchronized with the implemented PL/EN runtime on 2026-09-25
 **Mechanika:** [`EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`](EXPERIENCE_VR_COMMUNICATION_MECHANICS.md)
 
-The PL/EN localization migration is complete. Runtime Monkey copy is owned by the paired `VR_MONKEY_COMMUNICATION_COPY_PL` and `VR_MONKEY_COMMUNICATION_COPY_EN` catalogs and selected by the locale passed from Experience VR composition. Player Guide, objectives, Furnace, finale/credits and portfolio-card copy remain with their own localized runtime owners; Scenario events and effects are language-agnostic.
+The PL/EN localization migration is complete. Runtime Monkey copy is owned by the paired `VR_MONKEY_COMMUNICATION_COPY_PL` and `VR_MONKEY_COMMUNICATION_COPY_EN` catalogs and selected by the locale passed from Experience VR composition. Ordinary Current Objective copy and presentation are defined by [`EXPERIENCE_VR_CURRENT_OBJECTIVES.md`](EXPERIENCE_VR_CURRENT_OBJECTIVES.md); Player Guide, Furnace, finale/credits and portfolio-card copy remain with their own localized runtime owners. Scenario events and effects are language-agnostic.
 
 This document remains communication/copy authority rather than a duplicate runtime catalog. Its quoted Polish blocks are the canonical editorial reference; the corresponding approved English runtime copy is implemented, not a separate future task. Each quotation below preserves one `blocks[]` item as one bubble. `--- BLOCK ---` occurs only between separate array elements; a line break without that separator is an authored `\n` inside the same block.
 
@@ -446,16 +446,9 @@ The seven poetic blocks follow the unchanged Astrolabe control teaching in the s
 | 10 | `Nie ma własnego miejsca pomiędzy nimi.\nMoże właśnie dlatego potrafi je połączyć.` | `It has no place of its own among them.\nMaybe that's why it can connect them.` |
 | 11 | `Spróbujmy.` | `Let's try.` |
 
-## CURRENT OBJECTIVE — exact dynamic strings
+## Current Objective authority
 
-- `2.30`: `UKOŃCZ PIERWSZY KRĄG — n/5`
-- `3.80`: `ZGROMADŹ SKORUPY — n/6` or `ZBUDUJ KULĘ ASTERIONOWĄ` or `KULA ASTERIONOWA — PRODUKCJA` or `ODBIERZ KULĘ ASTERIONOWĄ`
-- `4.10`: `UKOŃCZ DRUGI KRĄG — n/5`
-- `4.70`, incomplete tuning: `DOSTRÓJ ASTROLABIUM — n/5 · UKOŃCZ TRZECI KRĄG — n/5`
-- `4.70`, full tuning: `UKOŃCZ TRZECI KRĄG — n/5`
-- `4.80`, no Resonator: `PRZYGOTUJ REZONATOR — STROJENIE n/3 · INSTALACJA n/3`
-- `4.80`, Resonator exists, and `5.10`: no objective.
-- `5.15`: PL `NAMIERZ GLIF WODY`; EN `ACQUIRE THE WATER GLYPH`.
+Ordinary Current Objective strings are intentionally not duplicated here. [`EXPERIENCE_VR_CURRENT_OBJECTIVES.md`](EXPERIENCE_VR_CURRENT_OBJECTIVES.md) is the single exact authority for their `{ id, title, blocks }` contract, surface presentation, Scenario binding and approved PL/EN copy.
 
 ## Player Y — exact persistent tool copy
 
