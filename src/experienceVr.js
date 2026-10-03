@@ -1039,8 +1039,6 @@ const currentObjectiveProjection = createVrCurrentObjectiveProjection({
   locale: language,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId(),
   getActivatedPageIds: () => progressionController.getActivatedPageIds(),
-  getAsterionProductionState: () => asterionProductionController.getState(),
-  getAsterionSphereProgress: () => furnaceProgressionController.getAsterionSphereProgress(),
   getExtractedFamilyCodes: () => protoAstroTuningController.getExtractedFamilyCodes(),
   getRuneProgressionSnapshot: () => runeStoneProgressionController.getSnapshot(),
   getResonatorDescriptor: () => asterionResonatorFieldActor.getDescriptor()
@@ -1051,7 +1049,7 @@ function synchronizeAttractorObjective(deltaSeconds) {
   attractorObjectiveSyncElapsed += Number.isFinite(deltaSeconds) ? Math.max(0, deltaSeconds) : 0;
   if (attractorObjectiveSyncElapsed < ATTRACTOR_OBJECTIVE_SYNC_INTERVAL_SECONDS) return;
   attractorObjectiveSyncElapsed %= ATTRACTOR_OBJECTIVE_SYNC_INTERVAL_SECONDS;
-  attractorTool.setObjectiveText(currentObjectiveProjection.getCurrentObjective()?.body ?? '');
+  attractorTool.setObjectiveText(currentObjectiveProjection.getCurrentObjective()?.title ?? '');
 }
 const playerGuideProjection = createVrPlayerGuideProjection({
   locale: language,
