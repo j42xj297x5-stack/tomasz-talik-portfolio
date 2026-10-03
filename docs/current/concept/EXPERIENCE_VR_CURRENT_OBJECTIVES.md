@@ -1,8 +1,8 @@
 # Experience VR — Current Objectives
 
-**Status:** CURRENT / BINDING DESIGN TARGET / IMPLEMENTATION PENDING
+**Status:** CURRENT / IMPLEMENTED
 
-This document is the single exact authority for ordinary Current Objective presentation, Scenario binding, identifiers, titles and explanatory PL/EN copy. The current runtime is implementation evidence only until it adopts this contract.
+This document is the single exact authority for the implemented ordinary Current Objective presentation, Scenario binding, identifiers, titles and explanatory PL/EN copy. The runtime implements this contract through one read-only projection of Scenario and domain truth.
 
 ## Runtime model
 
@@ -134,4 +134,4 @@ At `5.60`, the objective deliberately encourages experimentation and observation
 
 ## Implementation boundary
 
-Implementation must migrate the runtime projection from its current `{ id, body }` shape and stale point bindings to this `{ id, title, blocks }` contract. That code change is intentionally outside the scope of this document task.
+`createVrCurrentObjectiveProjection` implements the canonical `{ id, title, blocks }` shape and supplies the same semantic objective to all three surfaces. Monkey projects the title and ordered blocks, the Astrolabe of Binding projects the title only, and Player Y projects the title with explanatory text derived from the blocks. The projection remains read-only and does not own progression.
