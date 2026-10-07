@@ -83,13 +83,19 @@ export function createOverlay({ language, onClose } = {}) {
     if (videoEl) videoEl.hidden = true;
   };
 
-  const renderVideo = (video, projectTitle) => {
+  const renderVideo = (video, projectTitle, videoTitle, videoDescription) => {
     releaseVideo();
     const configuredVideo = getConfiguredYouTubeVideo(video);
     if (!videoEl || !configuredVideo) return;
 
+    const resolvedVideoTitle = videoTitle || copy.videoTitle;
     const heading = document.createElement('h3');
-    heading.textContent = copy.videoTitle;
+    heading.textContent = resolvedVideoTitle;
+
+    const description = document.createElement('p');
+    description.className = 'overlay__video-description';
+    description.textContent = videoDescription ?? '';
+
     const player = document.createElement('div');
     player.className = 'overlay__video-player';
     player.dataset.youtubePlayer = '';
@@ -100,8 +106,8 @@ export function createOverlay({ language, onClose } = {}) {
     playButton.className = 'overlay__video-play';
     playButton.type = 'button';
     playButton.textContent = copy.playVideo;
-    playButton.setAttribute('aria-label', `${copy.playVideoAria}: ${projectTitle}`);
-    playButton.addEventListener('click', () => loadYouTubeIframe(player, video, `${projectTitle} — ${copy.videoTitle}`), { once: true });
+    playButton.setAttribute('aria-label', `${copy.playVideoAria}: ${resolvedVideoTitle}`);
+    playButton.addEventListener('click', () => loadYouTubeIframe(player, video, `${videoTitle || projectTitle} — ${copy.videoTitle}`), { once: true });
     player.append(playButton);
 
     const directLink = document.createElement('a');
@@ -111,7 +117,10 @@ export function createOverlay({ language, onClose } = {}) {
     directLink.rel = 'noopener noreferrer';
     directLink.textContent = copy.openOnYouTube;
     directLink.setAttribute('aria-label', `${copy.openOnYouTube} — ${copy.opensInNewTab}`);
-    videoEl.append(heading, player, directLink);
+
+    videoEl.append(heading);
+    if (videoDescription) videoEl.append(description);
+    videoEl.append(player, directLink);
     videoEl.hidden = false;
   };
 
@@ -442,7 +451,7 @@ export function createOverlay({ language, onClose } = {}) {
       subtitleEl.hidden = !subtitle;
       subtitleEl.textContent = subtitle;
 
-      renderVideo(nodeData.video, nodeData.title);
+      renderVideo(nodeData.video, nodeData.title, nodeData.videoTitle, nodeData.videoDescription);
 
       renderProjectLinks(nodeData.projectLinks);
       renderCaseStudy(nodeData.caseStudy);
