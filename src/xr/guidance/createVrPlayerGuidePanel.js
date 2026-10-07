@@ -297,7 +297,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   function drawCurrentTaskCard(item) {
     context.fillStyle = config.colors.text;
     context.font = '700 31px sans-serif';
-    context.fillText(item.label, 36, 186);
+    context.fillText(item.title, 36, 186);
     context.fillStyle = config.colors.muted;
     context.font = '27px sans-serif';
     drawWrappedText(context, item.body, 36, 230, canvas.width - 72, 38, 5);
@@ -387,7 +387,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     const tools = projection?.getTools?.() ?? [];
     const knowledge = projection?.getKnowledge?.() ?? [];
     return content.items.map((item) => item.id === 'current-task' && currentTask
-      ? { ...item, body: currentTask.body }
+      ? { ...item, title: currentTask.title, body: currentTask.blocks.join('\n\n') }
       : item)
       .concat(tools.length ? [{ id: 'tools', label: content.toolsSectionLabel, tools }] : [])
       .concat(knowledge.length ? [{ id: 'knowledge', label: content.knowledgeSectionLabel, knowledge }] : []);

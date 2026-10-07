@@ -519,8 +519,15 @@ monkeyMotionRoot.position.set(settings.spatial.monkeyFinal.x, settings.spatial.m
 monkeyActor.dockCharacterToStone();
 monkeyActor.captureScenarioFinalPlacement();
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
+const largeGlyphItems = [
+  'ai-guide',
+  'ethics-life-protection',
+  'haiku-cosmos',
+  'creative-ai',
+  'spotify-digger'
+].map((glyphId) => resolvedPortfolioNodes.find((item) => item.id === glyphId));
 const largeGlyphActor = createVrLargeGlyphActor({
-  items: resolvedPortfolioNodes,
+  items: largeGlyphItems,
   assetManager,
   initialRadius: settings.largeGlyphs.initialRadius,
   worldY: settings.spatial.worldStableCenterY,
@@ -1032,8 +1039,6 @@ const currentObjectiveProjection = createVrCurrentObjectiveProjection({
   locale: language,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId(),
   getActivatedPageIds: () => progressionController.getActivatedPageIds(),
-  getAsterionProductionState: () => asterionProductionController.getState(),
-  getAsterionSphereProgress: () => furnaceProgressionController.getAsterionSphereProgress(),
   getExtractedFamilyCodes: () => protoAstroTuningController.getExtractedFamilyCodes(),
   getRuneProgressionSnapshot: () => runeStoneProgressionController.getSnapshot(),
   getResonatorDescriptor: () => asterionResonatorFieldActor.getDescriptor()
@@ -1044,7 +1049,7 @@ function synchronizeAttractorObjective(deltaSeconds) {
   attractorObjectiveSyncElapsed += Number.isFinite(deltaSeconds) ? Math.max(0, deltaSeconds) : 0;
   if (attractorObjectiveSyncElapsed < ATTRACTOR_OBJECTIVE_SYNC_INTERVAL_SECONDS) return;
   attractorObjectiveSyncElapsed %= ATTRACTOR_OBJECTIVE_SYNC_INTERVAL_SECONDS;
-  attractorTool.setObjectiveText(currentObjectiveProjection.getCurrentObjective()?.body ?? '');
+  attractorTool.setObjectiveText(currentObjectiveProjection.getCurrentObjective()?.title ?? '');
 }
 const playerGuideProjection = createVrPlayerGuideProjection({
   locale: language,
@@ -1172,7 +1177,11 @@ let astroFurnaceActivateInteraction = null;
 let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
 const runeOpenInteractionSource = { getState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED' };
-const runeActivateInteractionSource = { getState: () => astroFurnaceActivateInteraction?.getState?.() ?? 'IDLE' };
+const runeActivateInteractionSource = {
+  getState: () => astroFurnaceActivateInteraction?.getState?.() ?? 'IDLE',
+  getProcessKind: () => astroFurnaceActivateInteraction?.getProcessKind?.() ?? null,
+  getExtractionProgress: () => astroFurnaceActivateInteraction?.getExtractionProgress?.() ?? 0
+};
 let runeRecipeSelectionController = null;
 const runeRecipeSelectionSource = {
   getExpectedRecipe: () => runeRecipeSelectionController?.getExpectedRecipe?.() ?? null

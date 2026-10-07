@@ -32,7 +32,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     }
     const current = getCurrentObjective();
     return current ? Object.freeze({ id: `objective:${current.id}`, groupId: category.groupId,
-      label: current.body, question: current.body, blocks: Object.freeze([current.body]),
+      label: current.title, question: current.title, blocks: current.blocks,
       type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.TOPIC, lifecycle: VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ }) : null;
   }
   const copyById = (id) => copy.knowledge[id];
@@ -46,6 +46,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     if (groupId === category.groupId) {
       const ordinaryTopic = getTopic();
       const asterionBuild = isAstrolabiumOwned() && !isAsterionOwned()
+        && ordinaryTopic?.id !== 'objective:asterion-sphere'
         ? topicFromCopy('knowledge.asterion.build') : null;
       const finalWaterTopics = finalWaterGuidanceResolved ? [] : finalWaterSolutionRevealed
         ? [topicFromCopy('knowledge.finalWater.solution')]

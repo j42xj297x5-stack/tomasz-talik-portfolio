@@ -427,33 +427,47 @@ These elements are presented as future design directions, not as completed runti
       plaqueGlowColor: '#FF9C47'
     },
     ornamentPath: '/png/creative_ai_ornament.png',
+    video: {
+      youtubeId: 'iLS4ia5Dz9g',
+      posterPath: ''
+    },
     translations: {
       pl: {
         eyebrow: 'Tworzenie z AI',
-        leadText: 'Tworzę z AI we wszystkich obszarach dostępnych w domenie cyfrowej.',
-        bodyText: `Zaczynałem od muzyki, dźwięku i grafiki artystycznej. Z czasem przeszedłem do grafiki użytkowej, fotoedycji, projektowania materiałów wizualnych, tworzenia treści, programowania oraz generowania teksturowanych obiektów 3D.
+        videoTitle: 'Bajka o R. — Prolog I: Kamień',
+        videoDescription: 'Autorska forma filmowa łącząca narrację, generowany obraz, animację, dźwięk i montaż.',
+        bodyText: `Tworzę z AI w różnych obszarach cyfrowej pracy twórczej — od obrazu, dźwięku i obiektów 3D po kod, narrację i film.
 
-AI jest dla mnie czymś więcej niż narzędziem. To żywy szkicownik, laboratorium i przestrzeń twórczego sprzężenia zwrotnego. To, co powstaje na styku człowieka i maszyny, często prowadzi mnie dalej, niż początkowo planowałem. Obraz, dźwięk, fragment tekstu, rozwiązanie w kodzie albo nieoczekiwany rezultat mogą stać się początkiem kolejnego pomysłu, nowego kierunku lub całego projektu.
+Zaczynałem od muzyki, dźwięku i grafiki artystycznej. Z czasem doszły grafika użytkowa, fotoedycja, projektowanie materiałów wizualnych, programowanie, teksturowane obiekty 3D, a także krótkie formy filmowe łączące historię, obraz, animację, głos, muzykę, efekty dźwiękowe i montaż.
 
-Nauczyłem się zostawiać AI swobodę tam, gdzie efekt ma być świeży, nieoczywisty i niezależny od zamkniętej wizji. Nie próbuję kontrolować każdego szczegółu. Pytam, próbuję, doświadczam, wskazuję kierunek, zatrzymuję się, sprawdzam i pozwalam, aby proces również mnie zaskakiwał. Dzięki temu odkrywam nowe miejsca, obszary i możliwości, których wcześniej nie potrafiłbym świadomie zaprojektować.
+Przy pracy nad filmem AI może uczestniczyć na wielu etapach, ale każdy z nich pozostaje częścią jednej opowieści. Najpierw powstaje historia i scenopis, później język wizualny i obrazy referencyjne. Z nich mogą powstawać animowane ujęcia, a osobno narracja, dźwięk i muzyka. Dopiero montaż nadaje tym elementom rytm i ostateczną formę.
 
-Kiedy dokładnie wiem, jaki rezultat chcę osiągnąć, próbuję tyle razy, ile potrzeba. Poprawiam prompty, zmieniam narzędzia, łączę techniki i szukam właściwej formy. Nie każda droga prowadzi do oczekiwanego efektu. Czasem ujawnia własne ograniczenia — wtedy zmieniam ścieżkę, ale nie porzucam kierunku.
+Nie chodzi mi o przekazanie narzędziom decyzji twórczych. AI może wygenerować obraz, ruch, głos albo dźwięk, ale sens sceny, jej miejsce w historii, tempo i to, co ma pozostać niewypowiedziane, nadal wymagają świadomego wyboru autora.
 
-AI nie zastępuje twórcy. Poszerza przestrzeń, w której twórca może pytać, odkrywać, eksperymentować i nadawać znaczenie.`,
+Jednocześnie zostawiam miejsce na przypadek i zaskoczenie. AI jest dla mnie szkicownikiem, laboratorium i partnerem w eksperymencie. Nieoczekiwany obraz, dźwięk albo ruch potrafi otworzyć kierunek, którego wcześniej nie planowałem.
+
+Kiedy natomiast dokładnie wiem, czego szukam, próbuję tyle razy, ile potrzeba. Zmieniam prompt, referencję, narzędzie albo sposób pracy. Nie każda ścieżka prowadzi do oczekiwanego rezultatu — czasem trzeba ją porzucić, nie porzucając samej wizji.
+
+AI nie zastępuje twórcy. Poszerza przestrzeń, w której można opowiadać, eksperymentować, łączyć różne media i nadawać im znaczenie.`,
         closingText: 'Kierunek pozostaje ten sam: kreatywność, rozwój, tworzenie i dzielenie się.'
       },
       en: {
         eyebrow: 'Creating with AI',
-        leadText: 'I create with AI across every area available in the digital domain.',
-        bodyText: `I began with music, sound, and artistic graphics. Over time, I moved into applied visual design, photo editing, visual communication, content creation, programming, and generating textured 3D objects.
+        videoTitle: 'Bajka o R. — Prologue I: The Stone',
+        videoDescription: 'An original film form combining narrative, generative imagery, animation, sound, and editing.',
+        bodyText: `I create with AI across different areas of digital creative work — from image, sound, and 3D objects to code, narrative, and film.
 
-AI is more than a tool to me. It is a living sketchbook, a laboratory, and a space for creative feedback. What emerges at the meeting point between human and machine often takes me beyond what I originally planned. An image, a sound, a fragment of text, a solution in code, or an unexpected result can become the beginning of another idea, a new direction, or an entire project.
+I began with music, sound, and artistic graphics. Over time, this expanded into applied visual design, photo editing, visual communication, programming, textured 3D objects, and short films combining story, imagery, animation, voice, music, sound effects, and editing.
 
-I have learned to give AI freedom wherever the result should feel fresh, unexpected, and unconstrained by a fixed artistic vision. I do not try to control every detail. I ask, experiment, experience, point the way, pause, examine, and allow the process to surprise me. This is how I discover new places, fields, and possibilities that I would not have been able to design consciously in advance.
+In filmmaking, AI can take part in many stages, but every stage remains part of one story. The process may begin with the narrative and screenplay, followed by a visual language and reference images. These can become animated shots, while narration, sound, and music are developed separately. Editing is where these elements finally find their rhythm and form.
 
-When I know exactly what result I want to achieve, I try as many times as necessary. I refine prompts, change tools, combine techniques, and search for the right form. Not every path leads to the intended result. Sometimes it reveals its own limitations — then I change the path without abandoning the direction.
+For me, this does not mean handing creative decisions over to the tools. AI can generate an image, motion, a voice, or a sound, but the meaning of a scene, its place in the story, its pacing, and what should remain unspoken still require deliberate decisions from the author.
 
-AI does not replace the creator. It expands the space in which the creator can ask questions, discover, experiment, and create meaning.`,
+At the same time, I leave room for chance and surprise. AI is a sketchbook, a laboratory, and a partner in experimentation. An unexpected image, sound, or movement can reveal a direction I had not planned in advance.
+
+When I know exactly what I am looking for, however, I keep trying until I find it. I change the prompt, the reference, the tool, or the method. Not every path leads to the intended result — sometimes the path has to change without abandoning the vision itself.
+
+AI does not replace the creator. It expands the space in which stories can be told, ideas tested, different media combined, and meaning created.`,
         closingText: 'The direction remains the same: creativity, growth, making, and sharing.'
       }
     }

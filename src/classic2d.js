@@ -109,11 +109,14 @@ function renderVideoMarkup(node, interfaceCopy) {
   const posterStyle = video.posterPath
     ? ` style="background-image:url('${escapeHtml(publicPath(video.posterPath))}')"`
     : '';
+  const videoTitle = node.videoTitle || interfaceCopy.videoTitle;
+  const videoDescription = node.videoDescription || '';
   return `
     <section class="classic-2d-panel__video">
-      <h3>${escapeHtml(interfaceCopy.videoTitle)}</h3>
+      <h3>${escapeHtml(videoTitle)}</h3>
+      ${videoDescription ? `<p class="classic-2d-panel__video-description">${escapeHtml(videoDescription)}</p>` : ''}
       <div class="classic-2d-panel__video-player" data-classic-youtube-player${posterStyle}>
-        <button class="classic-2d-panel__video-play" type="button" data-classic-youtube-play aria-label="${escapeHtml(interfaceCopy.playVideoAria)}: ${escapeHtml(node.title)}">${escapeHtml(interfaceCopy.playVideo)}</button>
+        <button class="classic-2d-panel__video-play" type="button" data-classic-youtube-play aria-label="${escapeHtml(interfaceCopy.playVideoAria)}: ${escapeHtml(videoTitle)}">${escapeHtml(interfaceCopy.playVideo)}</button>
       </div>
       <a class="classic-2d-panel__video-link" href="${escapeHtml(video.watchUrl)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(interfaceCopy.openOnYouTube)} — ${escapeHtml(interfaceCopy.opensInNewTab)}">${escapeHtml(interfaceCopy.openOnYouTube)}</a>
     </section>
@@ -472,7 +475,8 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     const playVideoButton = event.target.closest('[data-classic-youtube-play]');
     if (playVideoButton) {
       const player = panel.querySelector('[data-classic-youtube-player]');
-      loadYouTubeIframe(player, activePanelContent?.video, `${activePanelContent?.title ?? ''} — ${interfaceCopy.videoTitle}`);
+      const iframeTitle = activePanelContent?.videoTitle || activePanelContent?.title || interfaceCopy.videoTitle;
+      loadYouTubeIframe(player, activePanelContent?.video, `${iframeTitle} — ${interfaceCopy.videoTitle}`);
       return;
     }
 

@@ -23,6 +23,7 @@ Each gate node contains:
 - Required `translations.pl` and `translations.en` content objects provide complete localized panel content while retaining the base record's shared metadata.
 - Optional visual model metadata (`modelPath`, `modelKind`) for per-node GLB visuals.
 - Optional `projectLinks` array for Experience 3D overlay links. Each valid entry contains `kind`, `label`, and an absolute `http` or `https` `url`; the overlay renders these as safe external links and does not pass their URLs through the public-path helper.
+- Optional shared `video` metadata may declare a YouTube source through `youtubeId` and optional `posterPath`. Localized translations may additionally provide `videoTitle` and `videoDescription`; both Classic 2D and Experience 3D render these fields through the same existing lazy YouTube player and fall back to the generic interface video heading when localized video copy is absent.
 
 Current draft gates:
 1. AI Guide
@@ -81,6 +82,7 @@ Current contract:
 - The resolver shallowly overlays a selected translation with `{ ...node, ...translation }`. Consequently, every localized nested object required by a panel, including `caseStudy`, must be complete and independent in both language variants.
 - `Haiku Cosmos` (`haiku-cosmos`) has a localized main panel and a complete localized case study in both languages. Its shared GLB, GIF, plaque, ornament, links, and other runtime metadata remain at record level.
 - `AI Guide`, `Creative AI`, and `Ethics / Life Protection` preserve multi-paragraph body copy in template literals so both panel implementations retain the same paragraph boundaries.
+- `Creative AI` now also declares shared YouTube metadata and localized `videoTitle` / `videoDescription` fields. The film is rendered before the main body copy in both Classic 2D and Experience 3D through the common video integration rather than a mode-specific implementation.
 - `DIG Engine` localizes its main panel, full case study, and six-item gallery in both languages; its GLB, GIF, plaque, ornament, and other runtime metadata remain shared at record level.
 - The five portfolio gates remain the conceptual mapping: AI Guide; DIG Engine / Spotify Digger; Haiku Cosmos; Creative AI; and Ethics / Life Protection.
 - Runtime IDs must not be renamed unless a separate migration task is created.

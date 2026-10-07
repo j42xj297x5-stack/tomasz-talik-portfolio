@@ -408,7 +408,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     enabled: true,
     deadzone: 0.18,
     moveSpeed: 1.8,
-    turnSpeed: 1.35,
+    turnSpeed: 0.945,
+    turnResponseExponent: 2,
     turnMode: 'SMOOTH',
     snapAngleDegrees: 45,
     snapActivationThreshold: 0.7,
@@ -1207,6 +1208,8 @@ export function normalizeExperienceVrSettings(candidate) {
       deadzone: finiteNumber(candidate.locomotion?.deadzone, defaults.locomotion.deadzone, { min: 0, max: 0.9 }),
       moveSpeed: finiteNumber(candidate.locomotion?.moveSpeed, defaults.locomotion.moveSpeed, { min: 0, max: 10 }),
       turnSpeed: finiteNumber(candidate.locomotion?.turnSpeed, defaults.locomotion.turnSpeed, { min: 0, max: 6 }),
+      turnResponseExponent: finiteNumber(candidate.locomotion?.turnResponseExponent,
+        defaults.locomotion.turnResponseExponent, { min: 1, max: 4 }),
       turnMode: ['SMOOTH', 'SNAP'].includes(candidate.locomotion?.turnMode)
         ? candidate.locomotion.turnMode : defaults.locomotion.turnMode,
       snapAngleDegrees: [30, 45, 60].includes(candidate.locomotion?.snapAngleDegrees)

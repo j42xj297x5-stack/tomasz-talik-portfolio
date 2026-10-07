@@ -1,124 +1,101 @@
 # Experience VR Audio Model
 
-Status: **CURRENT / BINDING**, synchronized with the implemented Experience VR runtime on 2026-09-25.
+Status: **CURRENT / BINDING**, synchronized with the implemented Experience VR runtime on 2026-10-02.
 
 ## SUMMARY DLA ARCHITEKTA
 
-Experience VR audio is implemented as an observer-only presentation layer. Scenario expresses narrative intent through symbolic entry effects; `src/experienceVr.js` maps those effects to audio actors; `VrAudioBridge` and the shared `audioManager` own playback. The required reachable package is fetched, decoded and cached before the launch screen reaches **READY**, so gameplay playback is cache-only. Audio failure remains fail-soft and cannot advance, block or repair gameplay state.
+Experience VR audio is an observer-only presentation layer. Scenario emits semantic effects, `src/experienceVr.js` maps them to bounded audio actors, and `VrAudioBridge` delegates playback to the shared `audioManager`. Every reachable path is fetched, decoded and cached before **READY**; gameplay playback is cache-only and fail-soft. Audio never advances or repairs gameplay truth.
 
-This document owns Experience VR-specific mappings and lifecycle. [`AUDIO_RUNTIME_MODEL.md`](AUDIO_RUNTIME_MODEL.md) owns the shared Web Audio graph, persistent Master Volume and generic non-VR behavior. Scenario progression, Rune state, Resonator containment and finale choreography remain with their dedicated models.
+This document owns detailed Experience VR cue mappings and lifecycle. [`AUDIO_RUNTIME_MODEL.md`](AUDIO_RUNTIME_MODEL.md) owns the shared Web Audio graph and Master Volume; Scenario, Rune, Resonator and finale authorities own gameplay.
 
-## Ownership boundary
+## Ownership and preparation
 
 ```text
-Scenario point entry
-  → semantic effect (for example SET_MAIN_AMBIENT_03)
-  → RuntimeExperience handler in experienceVr.js
-  → Experience VR sequencer/projection
-  → VrAudioBridge
-  → shared audioManager / decoded-buffer cache / Web Audio nodes
+Scenario/domain event → composition mapping → sequencer/projection
+→ VrAudioBridge → cached audioManager buffer → VR bus / spatial emitter
 ```
 
-- Scenario selects presentation semantically; it never handles paths, buffers, gains or sources.
-- Composition translates semantic effects and supplies read-only domain state/anchors.
-- Audio projections observe domain truth. They do not calculate acquisition, install a Rune, complete a Furnace process or commit progression.
-- `VrAudioBridge` is the fail-soft Experience VR boundary and stops its active sources on disposal.
-- `audioManager` owns the `AudioContext`, decoded-buffer cache, five VR buses and the common Master Volume path.
-- One composition-level XR listener update serves every spatial source; individual actors do not create listeners.
+The five VR buses are `AMBIENT`, `SPACE`, `WORLD`, `DEVICE` and `UI`. One composition-level XR listener update serves all spatial sources. Reset/disposal invalidates pending starts and releases owned sources. Reconstruction may restore persistent projections, but never replays transient capture, arrival, insertion or completion presentation.
 
-The five VR buses are `AMBIENT`, `SPACE`, `WORLD`, `DEVICE` and `UI`. Their default gains are unity beneath the shared master. Detailed shared graph behavior is intentionally not duplicated here.
+`prepareRuntimeAudio(REQUIRED_VR_AUDIO)` expands the reachable package with sequencer and projection dependencies. Only after preparation succeeds may the launch screen publish **READY**. No reachable runtime audio path performs an on-demand fetch.
 
-## Preparation, READY and cache-only playback
+## Main ambient programs
 
-Composition first preloads the critical visual package, then calls `vrAudio.prepareRuntimeAudio(REQUIRED_VR_AUDIO)`. The bridge expands that list with the reachable long-form Intro/main ambient assets, quiet layers, glyph process, Asterion device loops and Astro/Rune attractor loops. `audioManager.prepareVrAudio()` fetches and decodes those files into its buffer cache. Only after that awaited step succeeds does the Experience VR launch screen enter **READY**.
+Main selection is Scenario-owned and event-driven:
 
-During gameplay, one-shots, finite programs and overlapping loops resolve buffers from that prepared cache. Playback does not fetch on demand. Candidate starts are abortable; generation invalidation prevents a late asynchronous start from surviving a program change, reset or disposal. Reset clears transient sources and program state; audio is not reconstructed as gameplay truth.
-
-## Main ambient sequencer
-
-`createVrAmbientSequencer` is the implemented playback owner. Main selection is event-driven by Scenario entry effects, not by polling tiers or deriving progress inside audio:
-
-| Scenario entry | Semantic effect | Program |
+| Scenario entry | Effect | Program |
 | --- | --- | --- |
-| `2.10` | `SET_MAIN_AMBIENT_01` | `ambient_01.mp3` |
-| `2.40` | `SET_MAIN_AMBIENT_02` | `ambient_02.mp3` |
-| `4.20` | `SET_MAIN_AMBIENT_03` | `ambient_03.mp3` |
-| `4.80` | `SET_MAIN_AMBIENT_04` | `ambient_04.mp3` |
+| `2.10` | `SET_MAIN_AMBIENT_01` | `ambient_01` |
+| `2.40` | `SET_MAIN_AMBIENT_02` | `ambient_02` |
+| `4.20` | `SET_MAIN_AMBIENT_03` | `ambient_03` |
+| `4.80` | `SET_MAIN_AMBIENT_04` | `ambient_04` |
+| `5.10`, on Tier 4 `TIER_COMPLETED` | `SET_MAIN_AMBIENT_05` | `ambient_05` |
 
-The `2.10` handler also stops the Intro ambient before selecting the first main program. Re-selecting an already active healthy program is a no-op. A replacement is started as a candidate before the preceding program is cancelled; stale candidates are aborted or stopped.
+For `ambient_01–04`, playback alternates one ambient program, ten seconds of silence, six repetitions of the next quiet layer, and another ten-second gap. The `noise_quiete_loop_01–13` cursor is global across all main-program replacements, wraps `13 → 01`, and resets only with the sequencer.
 
-For `ambient_01–04`, the implemented program is:
-
-```text
-ambient_N ×1 → 10 s silence → next noise_quiete_loop_01–13 ×6
-             → 10 s silence → repeat ambient_N
-```
-
-The quiet cursor is global across main-program replacements and wraps `13 → 01`; it resets only with the sequencer. Each quiet segment has a 10-second fade-in and fade-out. Finite repetitions are scheduled by the shared owner from a single cached decoded buffer with the MP3 seam guard.
-
-### Dormant `ambient_05` tail branch
-
-The sequencer also implements an `ambient_05` tail program:
+`ambient_05` is active. After its initial program and the next shared quiet segment, its finite tail is exactly:
 
 ```text
-ambient_05 ×1
-→ 10 s → next quiet layer ×6 → 10 s → ambient_loop_01 ×6
-→ 10 s → next quiet layer ×6 → 10 s → ambient_loop_02 ×6
-→ ... → ambient_loop_04 ×6 → idle
+ambient_loop_01 → ambient_loop_03 → ambient_loop_04 → idle
 ```
 
-This is implemented playback behavior, not an implementation backlog. In the current composed product it is dormant: Scenario defines semantic selection only for `SET_MAIN_AMBIENT_01–04`, composition has no `SET_MAIN_AMBIENT_05` handler, and the required READY package contains `ambient_01–04` rather than `ambient_05`/`ambient_loop_01–04`. Therefore this document does not claim an active runtime binding for the dormant branch or invent a future Scenario point. The separate finale ambient program below owns the current ending.
+Quiet segments remain interleaved by the sequencer between tail programs. `ambient_loop_02` is neither a runtime dependency nor a physical audio asset. After `ambient_loop_04`, the main sequencer intentionally remains idle.
 
-## Intro and finale ambient programs
+## Intro and finale programs
 
-The Intro actor is driven by `SET_INTRO_AMBIENT_01–05` across points `1.10–1.130`. It schedules repetitions on the audio clock, uses the authored approximately five-second overlaps, treats repeated selection as a no-op and hands off to the main sequencer at `2.10`.
+`SET_INTRO_AMBIENT_01–05` drives the Intro sequence across `1.10–1.130`; `2.10` retires it before selecting the first main program. The independent finale sequencer maps `BEGIN_FINAL_AMBIENT_WAIT` to `ambient_intro_06`, farewell start to finite `ambient_intro_07`, and the synchronized world-release/credits path to `ambient_intro_08`. Candidate starts are generation-guarded so replacements, reset and disposal cannot leak stale sources.
 
-The implemented finale actor is independent of the main `ambient_05` branch:
+## Interaction mappings
 
-- `BEGIN_FINAL_AMBIENT_WAIT` starts overlapping `ambient_intro_06` while the final Monkey farewell is pending;
-- farewell start transitions to finite `ambient_intro_07` and retires the waiting loop;
-- `SYNC_FINAL_AMBIENT_AFTER_FAREWELL` synchronizes the world-release clock;
-- at 20 seconds, or through `ENSURE_FINAL_AMBIENT_08` on credits/brand entry, overlapping `ambient_intro_08` becomes the final loop.
+| Runtime interaction | Current cue/lifecycle |
+| --- | --- |
+| accepted crystal grabs | `cristal_grab_01 → 02 → 03 → 04 → wrap` |
+| Shell Astrolabium handoff | `put_into_01 → put_into_03 → wrap` |
+| Small Glyph Astrolabium handoff | `put_into_02 → put_into_04 → wrap` |
+| main Monkey menu | `click_panel_01` |
+| deeper Monkey navigation | `turn_page_02` |
+| Monkey final turn | `panel_sound_long_03` |
+| portal/reliquary reveal | `creating_06` |
+| Furnace world reveal | `creating_08` |
 
-Reset/dispose aborts pending requests and stops waiting, farewell, final and retiring sources.
+The Shell and Small Glyph handoff cursors are independent. These mappings do not transfer interaction ownership to audio.
 
-## Experience VR projections
+## Furnace projection
 
-The bridge and bounded projections implement the following mappings without owning their gameplay triggers:
+Accepted Shell insertion plays `glif_earth_4s_04`; accepted Small Glyph insertion plays `glif_fire_4s_04`. Both call `furnaceAudioProjection.playPhysicalOneShot()` and therefore use the stable Furnace HRTF spatial emitter. The same insertion presentation applies to ordinary Furnace insertion and Rune-recipe insertion.
 
-- UI panels, Player Guide, Monkey Guide, Reliquary, progress feedback and release bell one-shots;
-- Astro Furnace open/close, process, Rune-tuning and Asterion-construction physical sounds;
-- Astro/Asterion attraction loops, including Rune-family/Ether identities and their lifecycle fades;
-- Asterion Sphere background and drive loops;
-- sector acquisition and sector drive audio;
-- four-second Rune Binder arrival audio;
-- anticipatory `creating_01–05` Rune installation one-shots while physical installation remains authoritative;
-- installed Rune sector-anchored spatial loops;
-- Resonator target AIM/LOCK audio as an observation of containment/ring truth.
+The five runtime process kinds and their process audio are:
 
-The detailed Rune and Resonator state machines are intentionally not repeated here. Their audio projections consume identity, lifecycle state and world anchors supplied by those owners.
-
-## Asset status relevant to this model
-
-| Assets | Current status | Runtime binding |
+| Process kind | Meaning | Cue |
 | --- | --- | --- |
-| `ambient_01–04` | **IMPLEMENTED / ACTIVE** | Scenario effects at `2.10`, `2.40`, `4.20`, `4.80` |
-| `noise_quiete_loop_01–13` | **IMPLEMENTED / ACTIVE** | global rotating quiet cursor in the main sequencer |
-| `ambient_05`, `ambient_loop_01–04` | **IMPLEMENTED / DORMANT PROGRAM** | playback branch exists; no current Scenario/READY-package binding |
-| `ambient_intro_01–05` | **IMPLEMENTED / ACTIVE** | Intro semantic entry effects |
-| `ambient_intro_06–08` | **IMPLEMENTED / ACTIVE** | farewell, release, credits and brand finale actor |
-| `creating_01–05` | **IMPLEMENTED / ACTIVE** | anticipatory natural Rune installation cues |
-| `electricity_short_01–06`, `electricity_long_01–04` | **IMPLEMENTED / ACTIVE WHERE MAPPED** | Binder/sector projection mappings |
-| `electricity_short_07`, `electricity_short_08` | **UNUSED / RESERVED ASSETS** | no active runtime binding; no implementation is required |
+| `SHELL_EXTRACTION` | ordinary Shell processing | `astro_piec_work_01` |
+| `SMALL_GLYPH_ESSENCE_EXTRACTION` | ordinary Small Glyph essence extraction | `astro_piec_work_01` |
+| `RUNE_TUNING` | Rune tuning | `astro_piec_work_03` |
+| `ASTERION_CONSTRUCTION` | Asterion Sphere construction | `astro_piec_work_02` |
+| `ASTRO_ATTRACTOR_CONSTRUCTION` | Astro Attractor construction | `astro_piec_work_create_01` |
 
-`electricity_short_07.mp3` and `electricity_short_08.mp3` remain in the project. Their filenames do not establish gameplay intent. They may be reused if a suitable purpose is explicitly chosen later, but they are not waiting for containment, acquisition or any other mechanic and are not backlog items.
+Open/close and all listed process sounds remain physical `DEVICE` projection at the Furnace anchor. Process completion and gameplay commit remain Furnace/domain truth.
 
-## Invariants
+## Binder, Rune and Ether projection
 
-1. READY is published only after required Experience VR audio preparation completes.
+- Binder arrival begins with `electricity_short_06`.
+- Earth, Fire, Wood and Metal completion map respectively to `zwornik_01`, `zwornik_02`, `zwornik_03` and `zwornik_04`; Water maps to `astro_piec_change`.
+- Natural installed Rune loops remain sector-anchored HRTF `noise_laud_loop_04–08` projections.
+- Ether Astro Attractor pull uses `noise_laud_loop_09`.
+- Once Ether reaches `CAPTURED`, one persistent HRTF spatial `noise_laud_loop_09` emitter is anchored to the Monkey.
+- Reconstruction restores that captured-Ether emitter idempotently without replaying capture presentation.
+
+Rune/Binder/Ether actors own their state and anchors. Their projections observe settled truth and cannot install a Rune, capture Ether or open Water readiness.
+
+## Asset status and invariants
+
+`creating_07`, `panel_sound_03`, `panel_sound_04` and any other physically present but unowned file have no runtime meaning. Their existence creates neither a future requirement nor a backlog item.
+
+1. READY follows successful preparation of every reachable runtime audio dependency.
 2. Reachable gameplay playback is cache-only.
-3. Scenario/runtime semantics choose ambient presentation; audio never polls progression ownership.
-4. Audio observes domain state and cannot mutate gameplay truth.
-5. Optional playback failures remain fail-soft after preparation.
-6. Reset/disposal invalidates pending starts and releases active Experience VR sources.
-7. No runtime purpose is inferred for an unused asset.
+3. Main ambient selection is semantic and Scenario-owned; the shared quiet cursor survives program replacement.
+4. `ambient_05` is active, has only the `01 → 03 → 04` tail, and ends idle.
+5. Spatial projections use shared listener truth and their owner-provided anchors.
+6. Audio failure is fail-soft and cannot mutate gameplay.
+7. Reconstruction restores only persistent audio truth and remains silent for transient presentation.
+8. No purpose is inferred from an unused asset.
