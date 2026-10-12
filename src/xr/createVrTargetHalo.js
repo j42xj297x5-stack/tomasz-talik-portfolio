@@ -37,7 +37,7 @@ export function createVrTargetHalo({ root, settings = {} }) {
   const shells = [];
   function isEffectivelyVisible(source) {
     for (let object = source; object; object = object.parent) {
-      if (object.visible === false) return false;
+      if (object !== root && object.visible === false) return false;
       if (object === root) break;
     }
     return true;
